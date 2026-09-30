@@ -1,0 +1,12 @@
+# Generated challenge outputs (retained in the original submission folder)
+/output/*.tsv
+
+# Local datasets, indexes, and Python environments
+**/dataset/
+**/cache/
+**/.venv/
+**/__pycache__/
+*.py[cod]
+.DS_Store
+.env
+.env.*

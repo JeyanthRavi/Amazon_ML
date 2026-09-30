@@ -1,0 +1,33 @@
+{
+  "selected": {
+    "trial": 1,
+    "config": {
+      "max_iter": 300,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 40,
+      "l2_regularization": 2
+    },
+    "threshold": 0.7750000000000002,
+    "entities": 1000,
+    "tp": 2690,
+    "fp": 83,
+    "fn": 777,
+    "macro_f05": 0.8754429629097731,
+    "singletons": 53,
+    "singleton_false_positive": 8,
+    "truth_pairs": 3467,
+    "candidate_hits": 3328,
+    "precision": 0.9700685178507032,
+    "recall": 0.7758869339486588,
+    "blocking_recall": 0.9599077011825786
+  },
+  "precision_target": 0.9696279422930904,
+  "training_pairs": 494572,
+  "positive_training_pairs": 19961,
+  "training_entities": 6000,
+  "tuning_entities": 1000,
+  "evaluation_entities": 1000,
+  "model_sha256": "b967c5b716b0299d7ac580f0312f2c196ad20ec723682bbc8214dcfaae241116",
+  "baseline_sha256": "a293b08314cfdd32dbe486bdbde878d89500363673a70bbc6032c1650822a69b",
+  "evaluation_policy": "One fresh paired evaluation after model/threshold freeze."
+}

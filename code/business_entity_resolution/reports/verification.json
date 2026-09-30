@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "split_counts": {
+    "training": 6000,
+    "threshold_tuning": 1000,
+    "evaluation": 1000
+  },
+  "excluded_overlap": 0,
+  "candidate_rows": 8000,
+  "prediction_rows_per_model": 1000,
+  "recomputed": {
+    "expanded": {
+      "tp": 2641,
+      "fp": 105,
+      "fn": 788,
+      "macro_f05": 0.876592162639195,
+      "precision": 0.9617625637290604,
+      "recall": 0.7701953922426363
+    },
+    "baseline": {
+      "tp": 2518,
+      "fp": 114,
+      "fn": 911,
+      "macro_f05": 0.8527895254893428,
+      "precision": 0.9566869300911854,
+      "recall": 0.7343248760571596
+    }
+  },
+  "paired_macro_f05_difference": 0.023802637149852306,
+  "paired_bootstrap_95_percent_interval": [
+    0.014226257203833163,
+    0.03368331255355046
+  ],
+  "bootstrap_note": "Seeded paired S1 bootstrap, 5000 resamples; sample uncertainty only, not France/leaderboard generalization."
+}

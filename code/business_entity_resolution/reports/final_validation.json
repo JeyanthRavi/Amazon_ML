@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "rows": 1732544,
+  "candidate_pairs": 149648464,
+  "matched_pairs": 5062956,
+  "empty_candidates": 79,
+  "empty_matches": 146341,
+  "official_chunks": 347,
+  "countries": {
+    "US": 663106,
+    "France": 259452,
+    "India": 809986
+  },
+  "valid_target_ids": 9969589,
+  "official_validator_mode": "Unmodified supplied validate() on all rows in 5000-row chunks; avoids retaining all candidate sets in RAM.",
+  "strict_checks": "Complete S1 source-order coverage; actual target ID existence; duplicate-free lists; candidate cap; matches subset candidates.",
+  "matching_sha256": "7ac80caf845f96238c4ae2c8319321e0ea47f07570727026caac067c6d731230",
+  "candidate_sha256": "820b53a56515a4813468d01b8e0581207ed586a5a0cf2e0999b4f511a0c4495a"
+}
