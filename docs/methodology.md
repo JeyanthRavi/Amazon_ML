@@ -33,7 +33,7 @@ France has no supplied training labels; France accuracy is unknown. These valida
 Expanded training improves both precision and recall on a fresh paired sample. The pipeline preserves singleton and multi-match behavior and covers France through country-generic retrieval. Remaining accuracy limitations include lost blocking links and unmeasured France generalization.
 
 ## Appendix A: Code Artefacts
-All Python source is under `code/business_entity_resolution/src/`, with pinned requirements, MIT license, a frozen model and exact reproduction instructions. Build a test index with `persistent_index.py`, then regenerate both output files with `run_inference.py`. `finalize_submission.py` validates and packages results. Supplied data is not redistributed.
+All Python source is under `src/`, with pinned requirements, MIT license, a frozen model and exact reproduction instructions. Build a test index with `persistent_index.py`, then regenerate both output files with `run_inference.py`. `finalize_submission.py` validates and packages results. Supplied data is not redistributed.
 
 ## Appendix B: Validation
-The unmodified supplied validator's `validate()` function checks both files in 5,000-row chunks to keep RAM bounded. An additional streaming pass verifies complete source-order coverage, every candidate target ID against the full test target pool, list uniqueness and strict match-subset constraints. Validation reports and SHA256 hashes are included under `code/business_entity_resolution/reports/`.
+The unmodified supplied validator's `validate()` function checks both files in 5,000-row chunks to keep RAM bounded. An additional streaming pass verifies complete source-order coverage, every candidate target ID against the full test target pool, list uniqueness and strict match-subset constraints. Validation reports and SHA256 hashes are included under `reports/`.
