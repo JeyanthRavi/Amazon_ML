@@ -22,6 +22,12 @@ def digest(path):
     return h.hexdigest()
 
 
+def require(condition, message):
+    """Submission gates must also run under python -O."""
+    if not condition:
+        raise ValueError(message)
+
+
 def validate(data,output,validator,report):
     spec=importlib.util.spec_from_file_location('official_validator',validator)
     official=importlib.util.module_from_spec(spec);spec.loader.exec_module(official)
@@ -35,9 +41,9 @@ def validate(data,output,validator,report):
         tmp=Path(temporary)
         with (data/'test/test_source1.tsv').open() as source,(output/'candidate_pairs.tsv').open() as candidates,(output/'matching_results.tsv').open() as matches,(report/'official_validation.log').open('w') as log:
             readers=[csv.reader(f,delimiter='\t') for f in (source,candidates,matches)]
-            assert next(readers[0])==['entity_id','business_name','business_address','country']
-            assert next(readers[1])==official.CANDIDATE_HEADER
-            assert next(readers[2])==official.MATCHING_HEADER
+            require(next(readers[0])==['entity_id','business_name','business_address','country'], 'Invalid source header')
+            require(next(readers[1])==official.CANDIDATE_HEADER, 'Invalid candidate header')
+            require(next(readers[2])==official.MATCHING_HEADER, 'Invalid matching header')
             exhausted=False
             while not exhausted:
                 with (tmp/'test_source1.tsv').open('w') as sf,(tmp/'candidate_pairs.tsv').open('w') as cf,(tmp/'matching_results.tsv').open('w') as mf:
@@ -48,24 +54,24 @@ def validate(data,output,validator,report):
                         s=next(readers[0],None)
                         if s is None:exhausted=True;break
                         c=next(readers[1],None);m=next(readers[2],None)
-                        assert len(s)==4 and c is not None and m is not None and len(c)==len(m)==2
-                        assert s[0]==c[0]==m[0], 'Coverage/order mismatch'
+                        require(len(s)==4 and c is not None and m is not None and len(c)==len(m)==2, 'Invalid or missing output row')
+                        require(s[0]==c[0]==m[0], 'Coverage/order mismatch')
                         ci=c[1].split(',') if c[1] else [];mi=m[1].split(',') if m[1] else []
-                        assert len(ci)==len(set(ci))<=100 and len(mi)==len(set(mi))
-                        assert all(i.startswith(('S2-','S3-')) and i in targets for i in ci)
-                        assert set(mi)<=set(ci),'Match outside candidate list'
+                        require(len(ci)==len(set(ci))<=100 and len(mi)==len(set(mi)), 'Duplicate IDs or candidate cap exceeded')
+                        require(all(i.startswith(('S2-','S3-')) and i in targets for i in ci), 'Invalid target ID')
+                        require(set(mi)<=set(ci),'Match outside candidate list')
                         writers[0].writerow([s[0]]);writers[1].writerow(c);writers[2].writerow(m)
                         chunk+=1;stats['rows']+=1;stats['candidate_pairs']+=len(ci);stats['matched_pairs']+=len(mi)
                         stats['empty_candidates']+=not ci;stats['empty_matches']+=not mi;countries[s[3]]+=1
                 if chunk:
                     with redirect_stdout(log):errors,ws=official.validate(str(tmp/'matching_results.tsv'),str(tmp/'candidate_pairs.tsv'),str(tmp))
-                    assert not errors,errors
+                    require(not errors, str(errors))
                     # ID existence is checked against every complete test target above.
                     unexpected=[w for w in ws if not w.startswith('ID-existence check is OFF')]
-                    assert not unexpected,unexpected
+                    require(not unexpected, str(unexpected))
                     warnings.update(ws);stats['official_chunks']+=1
                     print(f"Validated {stats['rows']:,} output rows",flush=True)
-            assert next(readers[1],None) is None and next(readers[2],None) is None,'Extra output rows'
+            require(next(readers[1],None) is None and next(readers[2],None) is None,'Extra output rows')
     result=dict(status='PASS',**stats,countries=dict(countries),valid_target_ids=len(targets),
                 official_validator_mode='Unmodified supplied validate() on all rows in 5000-row chunks; avoids retaining all candidate sets in RAM.',
                 strict_checks='Complete S1 source-order coverage; actual target ID existence; duplicate-free lists; candidate cap; matches subset candidates.',
@@ -76,10 +82,16 @@ def validate(data,output,validator,report):
 
 def package(root,data,output,report,stats):
     submission=root/'submission';submission.mkdir(exist_ok=True)
+    team=json.loads((submission/'team.json').read_text())
+    team_name=team['team_name'].strip();members=team['team_members']
+    require(bool(team_name) and '/' not in team_name and '\\' not in team_name and team_name not in ('.','..'), 'Invalid team name')
+    require(bool(members) and all(isinstance(m,str) and m.strip() for m in members), 'Team members missing')
     document=f'''# ML Challenge 2026: Business Entity Resolution
 
-**Team Name:** Not supplied — fill in before uploading.  
-**Team Members:** Not supplied — fill in before uploading.  
+**Team Name:** {team_name}
+
+**Team Members:** {' & '.join(members)}
+
 **Package preparation date:** {date.today().isoformat()}
 
 ## 1. Executive Summary
@@ -119,7 +131,7 @@ The unmodified supplied validator's `validate()` function checks both files in 5
     (submission/'Documentation_template.md').write_text(document)
     readme='''# Reproduce the submission
 
-Requires Python 3.9+ with SQLite FTS5. The run was prepared on macOS arm64 with Python 3.9.6. Supply the original challenge dataset; do not move source files while an index or inference run is active.
+Requires Python 3.9+ on macOS or Linux with SQLite FTS5. The run was prepared on macOS arm64 with Python 3.9.6. Supply the original challenge dataset; do not move source files while an index or inference run is active.
 
 From this directory:
 
@@ -129,28 +141,32 @@ python3 -m venv .venv
 # Set this to the original supplied dataset directory (contains train/ and test/).
 DATA=/absolute/path/to/student_resource/dataset
 .venv/bin/python src/persistent_index.py --data "$DATA" --split test --index cache/test-index --budget-gib 3
-.venv/bin/python src/run_inference.py --data "$DATA" --split test --index cache/test-index --model models/expanded/matcher.joblib --output ../../output --workers 4 --batch-size 100
+.venv/bin/python src/run_inference.py --data "$DATA" --split test --index cache/test-index --model models/expanded/matcher.joblib --output ../../reproduced-output --workers 4 --batch-size 100
 ```
 
-The frozen model is included, so retraining is unnecessary to reproduce outputs. Checkpoints support restarting the same inference command with `--resume`; code, model, input paths/metadata and index must remain unchanged. Index construction automatically resumes compatible checkpoints. Allow approximately 3 GiB for the index, 2 GiB for outputs and at least 1.5 GiB spare disk. Inference may take many hours and varies with hardware and workload.
+The frozen model is included, so retraining is unnecessary to reproduce outputs. The new output directory avoids overwriting the packaged originals. Compare regenerated TSV SHA256 hashes with reports/final_validation.json. Checkpoints support restarting the same inference command with `--resume`; code, model, input paths/metadata and index must remain unchanged. Index construction automatically resumes compatible checkpoints. Allow approximately 3 GiB for the index, 2 GiB for outputs and at least 1.5 GiB spare disk. Inference may take many hours and varies with hardware and workload.
 
 Source also includes audits, blocker/model experiments, and verification. Original experiment samples and all supplied data are excluded from the archive; exact experiment metrics and model selection hashes are included in reports. To retrain, generate samples with the audit/blocking scripts and reproduce the documented exclusions before running expanded_training.py. The included trained artifact is the authoritative inference input.
 
-MIT license covers original source and trained model. Third-party packages and supplied challenge data retain their own licenses. Methodology fields for team name/members must be filled in before upload.
+MIT license covers original source and trained model. Third-party packages and supplied challenge data retain their own licenses. Team identity is filled in the root methodology document.
 '''
-    archive=submission/'business_entity_resolution_submission.zip';temporary=archive.with_suffix('.zip.tmp')
+    archive=submission/f'{team_name}_submission.zip';temporary=archive.with_suffix('.zip.tmp')
     prefix='code/business_entity_resolution/'
     with zipfile.ZipFile(temporary,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6,allowZip64=True) as z:
         for name in ('matching_results.tsv','candidate_pairs.tsv'):z.write(output/name,'output/'+name)
         z.write(submission/'Documentation_template.md','Documentation_template.md')
         z.writestr(prefix+'README.md',readme)
+        z.write(submission/'team.json',prefix+'submission/team.json')
         for name in ('LICENSE','requirements.txt'):z.write(root/name,prefix+name)
         for path in sorted((root/'src').glob('*.py')):z.write(path,prefix+'src/'+path.name)
         z.write(root/'models/expanded/matcher.joblib',prefix+'models/expanded/matcher.joblib')
         for path in (root/'models/expanded').glob('*.json'):z.write(path,prefix+'models/expanded/'+path.name)
         for path in [report/'final_validation.json',root/'reports/expanded/verification.json',root/'reports/EXPANDED_TRAINING.md']:
             z.write(path,prefix+'reports/'+path.name)
-    with zipfile.ZipFile(temporary) as z:assert z.testzip() is None,'ZIP integrity failure'
+        for name in ('FINISHED_STATUS.md','clean_environment_verification.json'):
+            path=root/'reports'/name
+            if path.exists():z.write(path,prefix+'reports/'+name)
+    with zipfile.ZipFile(temporary) as z:require(z.testzip() is None,'ZIP integrity failure')
     # Reproduce a bounded output prefix from the actual archived code and model.
     with tempfile.TemporaryDirectory(prefix='amazon-package-reproduce-') as work:
         work=Path(work)
@@ -160,13 +176,13 @@ MIT license covers original source and trained model. Third-party packages and s
         packaged=work/prefix;smoke=work/'smoke'
         subprocess.run([sys.executable,str(packaged/'src/run_inference.py'),'--data',str(data),
             '--split','test','--index',str(root/'cache/test-index'),'--model',str(packaged/'models/expanded/matcher.joblib'),
-            '--output',str(smoke),'--workers','2','--batch-size','10','--max-entities','30'],check=True,stdout=subprocess.DEVNULL)
+            '--output',str(smoke),'--workers','2','--batch-size','10','--max-entities','30','--min-free-gib','0.1'],check=True,stdout=subprocess.DEVNULL)
         for name in ('candidate_pairs.tsv','matching_results.tsv'):
             with (output/name).open('rb') as f:expected=b''.join(f.readline() for _ in range(31))
-            assert (smoke/name).read_bytes()==expected,'Packaged pipeline reproduction mismatch'
+            require((smoke/name).read_bytes()==expected,'Packaged pipeline reproduction mismatch')
     temporary.replace(archive)
     result=dict(status='READY',archive=str(archive.resolve()),archive_sha256=digest(archive),archive_bytes=archive.stat().st_size,
-                output_validation='PASS',packaged_reproduction_rows=30,packaged_reproduction='PASS',team_identity_fields='Not supplied; fill methodology before upload',uploaded=False)
+                output_validation='PASS',packaged_reproduction_rows=30,packaged_reproduction='PASS',team_identity_fields='Complete',team_name=team_name,team_members=members,uploaded=False,zip_integrity='PASS')
     (report/'package_manifest.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,indent=2),flush=True)
     return result
@@ -175,11 +191,18 @@ MIT license covers original source and trained model. Third-party packages and s
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--data',type=Path,required=True);parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--validator',type=Path,required=True);parser.add_argument('--report',type=Path,required=True)
+    parser.add_argument('--package-only',action='store_true',help='Reuse prior full validation only after checking both output SHA256 hashes')
     args=parser.parse_args();args.report.mkdir(parents=True,exist_ok=True)
     root=Path(__file__).resolve().parents[1]
     checkpoint=json.loads((args.output/'inference_checkpoint.json').read_text())
-    assert checkpoint['complete'] and checkpoint['rows']==1732544,'Full test inference is incomplete'
-    stats=validate(args.data,args.output,args.validator,args.report)
-    assert stats['rows']==1732544 and stats['countries']['France']==259452
+    require(checkpoint['complete'] and checkpoint['rows']==1732544,'Full test inference is incomplete')
+    if args.package_only:
+        stats=json.loads((args.report/'final_validation.json').read_text())
+        require(stats['status']=='PASS','Previous validation did not pass')
+        for name,key in [('matching_results.tsv','matching_sha256'),('candidate_pairs.tsv','candidate_sha256')]:
+            require(digest(args.output/name)==stats[key], 'Output changed since full validation: '+name)
+    else:
+        stats=validate(args.data,args.output,args.validator,args.report)
+    require(stats['rows']==1732544 and stats['countries']['France']==259452, 'Incomplete test coverage')
     package(root,args.data,args.output,args.report,stats)
 if __name__=='__main__':main()

@@ -1,5 +1,7 @@
 # Trough — Business Entity Resolution
 
+**Amazon ML Challenge 2026 project by R Jeyanth and Amber Chordia.** This is a portfolio copy of the team project. The challenge round has ended; the team was not selected for the next round.
+
 Match business records across datasets despite differences in spelling, abbreviations, names, and addresses. This repository contains Team Trough’s ML Challenge 2026 submission: a resumable candidate-retrieval pipeline, a trained matching model, and evaluation reports.
 
 ## Approach
@@ -12,7 +14,7 @@ The frozen trained model is included; retraining is unnecessary to run inference
 
 ## Reported results
 
-Results below are from a fresh, held-out evaluation of 1,000 reference businesses after model and threshold selection. They are **not leaderboard scores**.
+The submitted `matching_results.tsv` received a **public leaderboard macro F0.5 score of 0.857** on 27 September 2026. This is the public score, not a private leaderboard result or a claim of final ranking. The results below are from a separate, held-out evaluation of 1,000 reference businesses after model and threshold selection.
 
 | Metric | Baseline | Submitted model |
 | --- | ---: | ---: |
@@ -60,11 +62,11 @@ LICENSE              MIT license
 
 ## Generated outputs
 
-Inference writes `output/matching_results.tsv` and `output/candidate_pairs.tsv`. The original submission contains about 84 MB of matching results and 1.8 GB of candidate pairs. These generated files and the original dataset are excluded from Git; regenerate the outputs using the commands above.
+Inference writes `output/matching_results.tsv` and `output/candidate_pairs.tsv`. The original submission contains about 84 MB of matching results and 1.8 GB of candidate pairs. These generated files and the original dataset are excluded from Git; regenerate the outputs using the commands above. This repository contains no Colab notebook; the pipeline is implemented in Python scripts and can be run in a terminal or a notebook environment.
 
 The archived [full-output validation report](reports/final_validation.json) records validation of the original submission. This repository reorganization does not constitute a new full-dataset evaluation.
 
-`src/finalize_submission.py` creates the challenge’s original nested ZIP submission layout, which differs from this repository’s layout. Packaging requires the original dataset, validator, inference outputs, and experiment artifacts; see [reproduction instructions](docs/reproduction.md).
+`src/finalize_submission.py` creates the challenge’s original nested ZIP submission layout, which differs from this repository’s layout. Packaging requires the original dataset, validator, inference outputs, and test index; see [reproduction instructions](docs/reproduction.md). The published repository does not itself contain the generated TSVs or the 818 MiB submission ZIP.
 
 ## Team and license
 
