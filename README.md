@@ -1,8 +1,8 @@
-# Trough — Business Entity Resolution
+# Amazon ML Challenge 2026
 
 **Amazon ML Challenge 2026 project by R Jeyanth and Amber Chordia.** This is a portfolio copy of the team project. The challenge round has ended; the team was not selected for the next round.
 
-Match business records across datasets despite differences in spelling, abbreviations, names, and addresses. This repository contains Team Trough’s ML Challenge 2026 submission: a resumable candidate-retrieval pipeline, a trained matching model, and evaluation reports.
+Match business records across datasets despite differences in spelling, abbreviations, names, and addresses. This repository contains our Amazon ML Challenge 2026 submission: a resumable candidate-retrieval pipeline, a trained matching model, and evaluation reports.
 
 ## Approach
 
@@ -68,8 +68,8 @@ The archived [full-output validation report](reports/final_validation.json) reco
 
 `src/finalize_submission.py` creates the challenge’s original nested ZIP submission layout, which differs from this repository’s layout. Packaging requires the original dataset, validator, inference outputs, and test index; see [reproduction instructions](docs/reproduction.md). The published repository does not itself contain the generated TSVs or the 818 MiB submission ZIP.
 
-## Team and license
+## Contributors and license
 
-**Team Trough:** R Jeyanth & Amber Chordia.
+**Contributors:** R Jeyanth & Amber Chordia.
 
 Original source and trained model are covered by the [MIT license](LICENSE). Third-party packages and supplied challenge data retain their own licenses.

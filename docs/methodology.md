@@ -1,7 +1,6 @@
-# ML Challenge 2026: Business Entity Resolution
+# Amazon ML Challenge 2026: Business Entity Resolution
 
-**Team Name:** Trough  
-**Team Members:** R Jeyanth & Amber Chordia  
+**Contributors:** R Jeyanth & Amber Chordia  
 **Package preparation date:** 2026-09-27
 
 ## 1. Executive Summary

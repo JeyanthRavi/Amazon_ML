@@ -18,7 +18,7 @@ The frozen model is included, so retraining is unnecessary to reproduce outputs.
 
 Source also includes audits, blocker/model experiments, and verification. Original experiment samples and all supplied data are excluded from the archive; exact experiment metrics and model selection hashes are included in reports. To retrain, generate samples with the audit/blocking scripts and reproduce the documented exclusions before running expanded_training.py. The included trained artifact is the authoritative inference input.
 
-MIT license covers original source and trained model. Third-party packages and supplied challenge data retain their own licenses. Team: Trough. Members: R Jeyanth & Amber Chordia.
+MIT license covers original source and trained model. Third-party packages and supplied challenge data retain their own licenses. Contributors: R Jeyanth & Amber Chordia.
 
 ## Challenge packaging
 
